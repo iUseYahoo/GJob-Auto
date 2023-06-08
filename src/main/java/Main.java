@@ -1,3 +1,5 @@
+import data.ExampleOffice;
+import data.OfficeData;
 import gearth.extensions.Extension;
 import gearth.extensions.ExtensionInfo;
 import gearth.extensions.parsers.HDirection;
@@ -6,6 +8,7 @@ import gearth.extensions.parsers.HGender;
 import gearth.protocol.HPacket;
 import gearth.protocol.HMessage;
 import java.lang.String;
+import java.util.Map;
 
 @ExtensionInfo(
         Title = "GJob-Auto",
@@ -23,6 +26,7 @@ public class Main extends Extension {
     private boolean interceptNext = false;
     private HEntity user = null;
     private String _motto;
+    private Map<Integer, OfficeData> _offices;
 
     public Main(String[] args) {
         super(args);
@@ -38,42 +42,19 @@ public class Main extends Extension {
         // Read the int from the packet.
         roomid = packet.readInteger();
 
-        if (roomid == Rooms.HIA.getRoomId()) {
-            sendToServer(new HPacket("{out:JoinHabboGroup}{i:577170}")); // Badge
-            sendToServer(new HPacket("{out:ChangeMotto}{s:\"[HIA] Recruit\"}")); // Motto
-
-            // Outfit
-            if (gender == HGender.Male) {
-                sendToServer(new HPacket("{out:UpdateFigureData}{s:\"M\"}{s:\"ca-1813-0.sh-300-64.ch-225-73.lg-285-64.hd-180-1\"}"));
-            } else if (gender == HGender.Female) {
-                sendToServer(new HPacket("{out:UpdateFigureData}{s:\"F\"}{s:\"ca-1813-0.sh-907-64.hd-600-1.lg-715-64.hr-515-33.ch-880-73\"}"));
-            } else {
-                SilentMessage("Gender other than Male or Female detected. (onGetGuestRoom, HIA)");
-            }
-        } else if (roomid == Rooms.HMAF.getRoomId()) {
-            sendToServer(new HPacket("{out:JoinHabboGroup}{i:589944}"));
-            sendToServer(new HPacket("{out:ChangeMotto}{s:\"[BA] Recruit\"}"));
-
-            // Outfit
-            if (gender == HGender.Male) {
-                sendToServer(new HPacket("{out:UpdateFigureData}{s:\"M\"}{s:\"sh-300-64.ch-225-88.lg-285-88.hd-180-1.wa-2009-64\"}"));
-            } else if (gender == HGender.Female) {
-                sendToServer(new HPacket("{out:UpdateFigureData}{s:\"F\"}{s:\"sh-735-64.hd-600-1.lg-720-88.hr-515-33.ch-880-88.wa-2009-64\"}"));
-            } else {
-                SilentMessage("Gender other than Male or Female detected. (onGetGuestRoom, HMAF)");
-            }
-        } else if (roomid == Rooms.SS.getRoomId()) {
-            sendToServer(new HPacket("{out:JoinHabboGroup}{i:538923}"));
-            sendToServer(new HPacket("{out:ChangeMotto}{s:\"[SS] Recruit\"}"));
-
-            if (gender == HGender.Male) {
-                sendToServer(new HPacket("{out:UpdateFigureData}{s:\"M\"}{s:\"ca-1804-1408.sh-290-64.hd-180-1.lg-270-1408.ch-230-64.wa-2007-0\"}"));
-            } else if (gender == HGender.Female) {
-                sendToServer(new HPacket("{out:UpdateFigureData}{s:\"F\"}{s:\"ca-1805-64.sh-907-64.hd-600-1.lg-715-64.hr-515-33.ch-630-1408\"}"));
-            } else {
-                SilentMessage("Gender other than Male or Female detected. (onGetGuestRoom, SS)");
-            }
+        if (!isAuthorisedRoom(roomid) || !isValidGender(gender)) {
+            return;
         }
+
+        OfficeData officeData = this._offices.get(roomid);
+
+        if (officeData == null) {
+            return;
+        }
+
+        sendToServer(new HPacket("{out:JoinHabboGroup}{i:" + officeData.getGroupId() +"}"));
+        sendToServer(new HPacket("{out:ChangeMotto}{s:" + officeData.getMottoTag() + "}"));
+        sendToServer(new HPacket("{out:UpdateFigureData}{s: " + gender.toString() +"}{s:" + officeData.getFigureByGender(gender) + "}"));
     }
 
     public void SilentMessage(String message) {
@@ -145,6 +126,14 @@ public class Main extends Extension {
         interceptNext = true;
     }
 
+    private boolean isAuthorisedRoom(int roomId) {
+        return roomId == Rooms.HIA.getRoomId() || roomId == Rooms.HMAF.getRoomId() || roomId == Rooms.SS.getRoomId();
+    }
+
+    private boolean isValidGender(HGender gender) {
+        return gender == HGender.Male || gender == HGender.Female;
+    }
+
     @Override
     protected void initExtension() {
         // Intercept the room the user enters, and get the room id.
@@ -155,5 +144,9 @@ public class Main extends Extension {
         intercept(HMessage.Direction.TOCLIENT, "Items", this::onItems);
         // Intercept when the user enters the room, getting their userid and figure.
         intercept(HMessage.Direction.TOCLIENT, "Users", this::onUsers);
+
+        this._offices.put(Rooms.HIA.getRoomId(), new ExampleOffice(Rooms.HIA.getRoomId(), 577170, "[HIA] Recruit"));
+        this._offices.put(Rooms.HMAF.getRoomId(), new ExampleOffice(Rooms.HMAF.getRoomId(), 589944, "[BA] Recruit"));
+        this._offices.put(Rooms.SS.getRoomId(), new ExampleOffice(Rooms.SS.getRoomId(), 538923, "[SS] Recruit"));
     }
 }
