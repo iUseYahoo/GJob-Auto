@@ -22,6 +22,8 @@ public class Main extends Extension {
     private HGender gender;
     private boolean interceptNext = false;
     private HEntity user = null;
+    private String _motto;
+
     public Main(String[] args) {
         super(args);
     }
@@ -60,6 +62,17 @@ public class Main extends Extension {
             } else {
                 SilentMessage("Gender other than Male or Female detected. (onGetGuestRoom, HMAF)");
             }
+        } else if (roomid == Rooms.SS.getRoomId()) {
+            sendToServer(new HPacket("{out:JoinHabboGroup}{i:538923}"));
+            sendToServer(new HPacket("{out:ChangeMotto}{s:\"[SS] Recruit\"}"));
+
+            if (gender == HGender.Male) {
+                sendToServer(new HPacket("{out:UpdateFigureData}{s:\"M\"}{s:\"ca-1804-1408.sh-290-64.hd-180-1.lg-270-1408.ch-230-64.wa-2007-0\"}"));
+            } else if (gender == HGender.Female) {
+                sendToServer(new HPacket("{out:UpdateFigureData}{s:\"F\"}{s:\"ca-1805-64.sh-907-64.hd-600-1.lg-715-64.hr-515-33.ch-630-1408\"}"));
+            } else {
+                SilentMessage("Gender other than Male or Female detected. (onGetGuestRoom, SS)");
+            }
         }
     }
 
@@ -78,25 +91,19 @@ public class Main extends Extension {
 
         if (roomid == Rooms.HIA.getRoomId()) {
             sendToServer(new HPacket("{out:KickMember}{i:577170}{i:" + this._userId + "}{b:false}"));
-
-            if (gender == HGender.Male) {
-                sendToServer(new HPacket("{out:UpdateFigureData}{s:\"M\"}{s:\"" + this._figure + "\"}"));
-            } else if (gender == HGender.Female) {
-                sendToServer(new HPacket("{out:UpdateFigureData}{s:\"F\"}{s:\"" + this._figure + "\"}"));
-            } else {
-                SilentMessage("Gender other than Male or Female detected. (onCloseConnection)");
-            }
-
         } else if (roomid == Rooms.HMAF.getRoomId()) {
-            sendToServer(new HPacket("{out:KickMember}{i:577170}{i:" + this._userId + "}{b:false}"));
+            sendToServer(new HPacket("{out:KickMember}{i:589944}{i:" + this._userId + "}{b:false}"));
+        } else if (roomid == Rooms.SS.getRoomId()) {
+            sendToServer(new HPacket("{out:KickMember}{i:538923}{i:" + this._userId + "}{b:false}"));
+        }
 
-            if (gender == HGender.Male) {
-                sendToServer(new HPacket("{out:UpdateFigureData}{s:\"M\"}{s:\"" + this._figure + "\"}"));
-            } else if (gender == HGender.Female) {
-                sendToServer(new HPacket("{out:UpdateFigureData}{s:\"F\"}{s:\"" + this._figure + "\"}"));
-            } else {
-                SilentMessage("Gender other than Male or Female detected. (onCloseConnection)");
-            }
+        sendToServer(new HPacket("{out:ChangeMotto}{s:\"" + this._motto + "\"}"));
+        if (gender == HGender.Male) {
+            sendToServer(new HPacket("{out:UpdateFigureData}{s:\"M\"}{s:\"" + this._figure + "\"}"));
+        } else if (gender == HGender.Female) {
+            sendToServer(new HPacket("{out:UpdateFigureData}{s:\"F\"}{s:\"" + this._figure + "\"}"));
+        } else {
+            SilentMessage("Gender other than Male or Female detected. (onCloseConnection)");
         }
     }
 
@@ -115,6 +122,9 @@ public class Main extends Extension {
             HPacket packet = hmsg.getPacket();
             // store the userid
             this._userId = packet.readInteger();
+            packet.readString();
+            // store the motto
+            this._motto = packet.readString();
             // store the figure (outfit)
             this._figure = packet.readString();
         }

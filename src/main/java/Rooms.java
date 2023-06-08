@@ -1,7 +1,8 @@
 public enum Rooms {
     // Code: https://stackoverflow.com/questions/1067352/can-i-set-enum-start-value-in-java
     HMAF(78630689),
-    HIA(76377765);
+    HIA(76377765),
+    SS(66320798);
 
     private final int roomId;
 
