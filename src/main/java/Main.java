@@ -83,7 +83,7 @@ public class Main extends Extension {
 
         sendToServer(new HPacket("{out:KickMember}{i:" + officeData.getGroupId() +"}{i:" + this._userId + "}{b:false}"));
         sendToServer(new HPacket("{out:ChangeMotto}{s:" + this._motto + "}"));
-        sendToServer(new HPacket("{out:UpdateFigureData}{s:" + this._figure +"}"));
+        sendToServer(new HPacket("{out:UpdateFigureData}{s:" + this._gender.toString() + "}{s:" + this._figure +"}"));
     }
 
     public void onUsers(HMessage hmsg) {
